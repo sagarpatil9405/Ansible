@@ -1,7 +1,7 @@
 ---
 - name: Playbook to install generic tools
   hosts: pvt
-  gather_facs: yes
+  gather_facts: yes
   become: yes
   become_user: root
   vars:
