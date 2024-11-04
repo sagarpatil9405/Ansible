@@ -46,29 +46,3 @@ If you are unable to connect to clients, then redis is also be a issue. Disable 
 25. Dynamic Inventory
 26. AWX
 
-$Env:AWS_ACCESS_KEY_ID="XX"
-$Env:AWS_SECRET_ACCESS_KEY="XXX"
-$Env:AWS_REGION="us-east-1"
-
-
-Good article to speedup playbook execution:
-https://www.redhat.com/sysadmin/faster-ansible-playbook-execution
-
-adminsree/uFuBoSZaxDJ3kprs
-
-https://www.mongodb.com/try/download/shell
-
-aws ec2 create-vpc-endpoint --vpc-id vpc-0eac6d4d55868caa8 --region us-east-1 --service-name com.amazonaws.vpce.us-east-1.vpce-svc-09348dd1f4596396e --vpc-endpoint-type Interface --subnet-ids subnet-0d124b5eb12011584
-
-mongosh "mongodb+srv://awsb51-instance-pl-0.3jmzd.mongodb.net/" --apiVersion 1 --username <username>
-
-
-Points to consider when using VPC Endpoint to Mongo Atlas:
-1. Both Atlas and You Server should be in same region.
-2. Whitelisting using IP Address list dont work for Private Endpoints.
-3. VPC Endpoint in your account will be assgined with Default Secure and make sure you
-   allowd all traffic. Allowed only 27001 and it didnt worked. May be its using TCP/22.
-4. Install Mongoshell and Compass from https://www.mongodb.com/try/download/shell
-
-
-
