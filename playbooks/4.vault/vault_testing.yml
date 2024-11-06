@@ -14,14 +14,19 @@
       6265353764313339300a396136323631343937393730363739623637343636336631356135326230
       6439
   tasks:
-    - name: Ensure pip3, venv, awscli, and jq are installed
+    - name: Ensure pip3 and venv are installed
       ansible.builtin.package:
         name:
           - python3-pip
           - python3-venv
-          - awscli
-          - jq
+          - jq # Install jq as a system package
         state: present
+      become: true
+
+    - name: Install awscli using pip3
+      ansible.builtin.pip:
+        name: awscli
+        executable: pip3
       become: true
 
     - name: Create a virtual environment for Python packages
