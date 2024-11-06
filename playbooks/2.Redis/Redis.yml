@@ -31,14 +31,34 @@
         remote_src: yes #IF YOU ARE NOT GIVING REMOTE_SORUCE: YES --> ITS GOING TO CHECKIN LOCAL
       when: redis_status.rc != 0
 
-    - name: Compile and install Redis #
+    - name: Ensure build dependencies are installed
+      ansible.builtin.yum:
+        name: make, gcc
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Ensure build dependencies are installed
+      ansible.builtin.apt:
+        name: make, gcc
+        state: present
+      when: ansible_os_family == "Deb
+
+    - name: Compile and install Redis
       shell: |
         cd /tmp/redis-6.2.5 
         make install
       args:
         executable: /bin/bash
       when: redis_status.rc != 0
-      #WE ARE GOING INTO THIS FODLER AND INSTALLING MAKE AND WE ARE EXECUTING ALL COMMANDS IN BIN/BASH
+
+    # - name: Compile and install Redis #
+    #   shell: |
+    #     cd /tmp/redis-6.2.5
+    #     make install
+    #   args:
+    #     executable: /bin/bash
+    #   when: redis_status.rc != 0
+    #   #WE ARE GOING INTO THIS FODLER AND INSTALLING MAKE AND WE ARE EXECUTING ALL COMMANDS IN BIN/BASH
 
     - name: Configure Redis
       copy:
