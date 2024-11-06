@@ -34,7 +34,6 @@
     - name: Compile and install Redis #
       shell: |
         cd /tmp/redis-6.2.5 
-        make
         make install
       args:
         executable: /bin/bash
