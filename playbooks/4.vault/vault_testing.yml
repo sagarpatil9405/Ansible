@@ -1,4 +1,3 @@
-#ansible-playbook -i invfile Playbooks/vault_testing.yml -vv --ask-vault-pass
 ---
 - name: Run AWS Cli Commands On All Servers
   hosts: pvt
@@ -14,23 +13,27 @@
       38363439623938336534623331663236646135626436663962316632663332656662646431663336
       6265353764313339300a396136323631343937393730363739623637343636336631356135326230
       6439
-    # elastic_password: !vault |
-    #   $ANSIBLE_VAULT;1.1;AES256
-    #   30643332646362626336383264303533386336393835326362323438626531383234353830323666
-    #   3866663432306562616435326237633266633034393763640a326466616433396533616265326439
-    #   61353438393539353265363262343539323237313532366537353863663838626564383539343262
-    #   3834646562666435360a616265326266336630336634646334616261356263303764383433343864
-    #   66396661336336336366623063636366343665656538333561306336643537326366353534316162
-    #   34346338363133636535336136633164656239386130313734323939343263623035316633343134
-    #   613165636663356163373236343339623732
   tasks:
+    - name: Ensure pip3 is installed
+      ansible.builtin.package:
+        name: python3-pip
+        state: present
+      become: true
+
+    - name: Install Python passlib module
+      ansible.builtin.pip:
+        name: passlib
+        executable: pip3 # Explicitly specify pip3
+      become: true
+
     - name: Create .aws folder
       shell: mkdir -p /root/.aws
       ignore_errors: yes
+
     - name: Copy Encrypted File To /tmp
       copy:
-        src: /tmp/{{item}} #This Encrypted File Must Be Created Prior To Running The Playbook.
-        dest: /tmp/{{item}}
+        src: /tmp/{{ item }} # This Encrypted File Must Be Created Prior To Running The Playbook.
+        dest: /tmp/{{ item }}
         owner: root
         group: root
         mode: "0600"
@@ -38,42 +41,36 @@
         - aws_creds
         - tls.key
         - tls.crt
+
     - name: Copy Encrypted Credentials File To .aws folder
       copy:
-        src: /tmp/aws_creds #This Encrypted File Must Be Created Prior To Running The Playbook.
+        src: /tmp/aws_creds # This Encrypted File Must Be Created Prior To Running The Playbook.
         dest: /root/.aws/credentials
         owner: root
         group: root
         mode: "0600"
+
     - name: Check S3 Buckets
       shell: aws s3 ls | cut -d " " -f 3
       register: buckets
+
     - name: Print Bucket Name
       debug:
         var: buckets
+
     - name: Get VPCS
       shell: aws ec2 describe-vpcs | jq ".Vpcs[].VpcId" -r
       register: vpcs
+
     - name: Print VPC ID
       debug:
         var: vpcs
 
-    - name: Install Python passlib module
-      ansible.builtin.pip:
-        name: passlib
-      become: true
-
-    - name: Ensure pip is installed
-      ansible.builtin.package:
-        name: python3-pip
+    - name: Creating admin users
+      ansible.builtin.user:
+        name: "{{ item }}"
         state: present
-      become: true
-
-    - name: Creating admin "{{item}}"
-      user:
-        name: "{{item}}"
-        state: present
-        comment: Admin User "{{item}}"
+        comment: "Admin User {{ item }}"
         groups: root
         shell: /bin/bash
         group: sudo
@@ -83,6 +80,7 @@
         - Avinash
         - Saikiran
         - Gnane
+
     - name: Replace Password Authentication To Yes
       ansible.builtin.lineinfile:
         path: /etc/ssh/sshd_config
@@ -91,23 +89,10 @@
         backup: yes
       notify:
         - Restart SSH Service
-    # - name: Install Elastic Agent
-    #   shell: |
-    #     curl -L -O https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-8.10.4-linux-x86_64.tar.gz
-    #     tar xzvf elastic-agent-8.10.4-linux-x86_64.tar.gz
-    #     cd elastic-agent-8.10.4-linux-x86_64
-    #     sudo ./elastic-agent install --url=https://ee71b9fe333346e0ac91f0529680a324.fleet.us-east-1.aws.found.io:443 --enrollment-token={{ elastic_password }}
-    # - name: Copy Encrypted /tmp/heartbeat.yml File To /etc/heartbeat/ folder
-    #   copy:
-    #     src: /tmp/heartbeat.yml #This Encrypted File Must Be Created Prior To Running The Playbook.
-    #     dest: /etc/heartbeat/heartbeat.yml
-    #     owner: root
-    #     group: root
-    #     mode: "0600"
-    #   notify:
-    #     - Restart elastic-agent
+
   handlers:
     - name: Restart SSH Service
       shell: service sshd restart
+
     - name: Restart elastic-agent
       shell: sudo heartbeat setup && sudo service heartbeat-elastic start
