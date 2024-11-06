@@ -1,5 +1,6 @@
+#ansible-playbook -i invfile Playbooks/vault_testing.yml -vv --ask-vault-pass
 ---
-- name: Run AWS CLI Commands On All Servers
+- name: Run AWS Cli Commands On All Servers
   hosts: pvt
   gather_facts: yes
   become: yes
@@ -13,45 +14,23 @@
       38363439623938336534623331663236646135626436663962316632663332656662646431663336
       6265353764313339300a396136323631343937393730363739623637343636336631356135326230
       6439
+    elastic_password: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      30643332646362626336383264303533386336393835326362323438626531383234353830323666
+      3866663432306562616435326237633266633034393763640a326466616433396533616265326439
+      61353438393539353265363262343539323237313532366537353863663838626564383539343262
+      3834646562666435360a616265326266336630336634646334616261356263303764383433343864
+      66396661336336336366623063636366343665656538333561306336643537326366353534316162
+      34346338363133636535336136633164656239386130313734323939343263623035316633343134
+      613165636663356163373236343339623732
   tasks:
-    - name: Ensure pip3, venv, and jq are installed
-      ansible.builtin.package:
-        name:
-          - python3-pip
-          - python3-venv
-          - jq # Install jq as a system package
-        state: present
-      become: true
-
-    - name: Create a virtual environment for Python packages
-      ansible.builtin.command:
-        cmd: python3 -m venv /opt/venv
-      args:
-        creates: /opt/venv
-      become: true
-
-    - name: Install awscli and passlib in the virtual environment
-      ansible.builtin.command:
-        cmd: "/opt/venv/bin/pip install awscli passlib"
-      become: true
-
-    - name: Specify Python interpreter in the virtual environment
-      set_fact:
-        ansible_python_interpreter: /opt/venv/bin/python
-
     - name: Create .aws folder
-      ansible.builtin.file:
-        path: /root/.aws
-        state: directory
-        owner: root
-        group: root
-        mode: "0700"
+      shell: mkdir -p /root/.aws
       ignore_errors: yes
-
     - name: Copy Encrypted File To /tmp
-      ansible.builtin.copy:
-        src: /tmp/{{ item }}
-        dest: /tmp/{{ item }}
+      copy:
+        src: /tmp/{{item}} #This Encrypted File Must Be Created Prior To Running The Playbook.
+        dest: /tmp/{{item}}
         owner: root
         group: root
         mode: "0600"
@@ -59,28 +38,30 @@
         - aws_creds
         - tls.key
         - tls.crt
-
     - name: Copy Encrypted Credentials File To .aws folder
-      ansible.builtin.copy:
-        src: /tmp/aws_creds
+      copy:
+        src: /tmp/aws_creds #This Encrypted File Must Be Created Prior To Running The Playbook.
         dest: /root/.aws/credentials
         owner: root
         group: root
         mode: "0600"
-
     - name: Check S3 Buckets
-      ansible.builtin.shell: "/opt/venv/bin/aws s3 ls | cut -d ' ' -f 3"
+      shell: aws s3 ls | cut -d " " -f 3
       register: buckets
-
     - name: Print Bucket Name
-      ansible.builtin.debug:
+      debug:
         var: buckets
-
-    - name: Creating admin users
-      ansible.builtin.user:
-        name: "{{ item }}"
+    - name: Get VPCS
+      shell: aws ec2 describe-vpcs | jq ".Vpcs[].VpcId" -r
+      register: vpcs
+    - name: Print VPC ID
+      debug:
+        var: vpcs
+    - name: Creating admin "{{item}}"
+      user:
+        name: "{{item}}"
         state: present
-        comment: "Admin User {{ item }}"
+        comment: Admin User "{{item}}"
         groups: root
         shell: /bin/bash
         group: sudo
@@ -90,7 +71,6 @@
         - Avinash
         - Saikiran
         - Gnane
-
     - name: Replace Password Authentication To Yes
       ansible.builtin.lineinfile:
         path: /etc/ssh/sshd_config
@@ -99,10 +79,8 @@
         backup: yes
       notify:
         - Restart SSH Service
-
   handlers:
     - name: Restart SSH Service
-      ansible.builtin.shell: service sshd restart
-
+      shell: service sshd restart
     - name: Restart elastic-agent
-      ansible.builtin.shell: sudo heartbeat setup && sudo service heartbeat-elastic start
+      shell: sudo heartbeat setup && sudo service heartbeat-elastic start
