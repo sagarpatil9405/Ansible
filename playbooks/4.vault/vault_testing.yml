@@ -1,5 +1,5 @@
 ---
-- name: Run AWS Cli Commands On All Servers
+- name: Run AWS CLI Commands On All Servers
   hosts: pvt
   gather_facts: yes
   become: yes
@@ -14,11 +14,13 @@
       6265353764313339300a396136323631343937393730363739623637343636336631356135326230
       6439
   tasks:
-    - name: Ensure pip3 and venv are installed
+    - name: Ensure pip3, venv, awscli, and jq are installed
       ansible.builtin.package:
         name:
           - python3-pip
           - python3-venv
+          - awscli
+          - jq
         state: present
       become: true
 
@@ -64,7 +66,7 @@
         mode: "0600"
 
     - name: Check S3 Buckets
-      ansible.builtin.shell: "/opt/venv/bin/aws s3 ls | cut -d ' ' -f 3"
+      ansible.builtin.shell: "aws s3 ls | cut -d ' ' -f 3"
       register: buckets
 
     - name: Print Bucket Name
@@ -72,7 +74,7 @@
         var: buckets
 
     - name: Get VPCs
-      ansible.builtin.shell: "/opt/venv/bin/aws ec2 describe-vpcs | /opt/venv/bin/jq '.Vpcs[].VpcId' -r"
+      ansible.builtin.shell: "aws ec2 describe-vpcs | jq '.Vpcs[].VpcId' -r"
       register: vpcs
 
     - name: Print VPC ID
