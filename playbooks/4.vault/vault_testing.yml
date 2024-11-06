@@ -35,6 +35,10 @@
         cmd: "/opt/venv/bin/pip install awscli passlib"
       become: true
 
+    - name: Specify Python interpreter in the virtual environment
+      set_fact:
+        ansible_python_interpreter: /opt/venv/bin/python
+
     - name: Create .aws folder
       ansible.builtin.file:
         path: /root/.aws
@@ -71,6 +75,14 @@
     - name: Print Bucket Name
       ansible.builtin.debug:
         var: buckets
+
+    - name: Get VPCs
+      ansible.builtin.shell: "/opt/venv/bin/aws ec2 describe-vpcs | /opt/venv/bin/jq '.Vpcs[].VpcId' -r"
+      register: vpcs
+
+    - name: Print VPC ID
+      ansible.builtin.debug:
+        var: vpcs
 
     - name: Creating admin users
       ansible.builtin.user:
