@@ -14,19 +14,13 @@
       6265353764313339300a396136323631343937393730363739623637343636336631356135326230
       6439
   tasks:
-    - name: Ensure pip3 and venv are installed
+    - name: Ensure pip3, venv, and jq are installed
       ansible.builtin.package:
         name:
           - python3-pip
           - python3-venv
           - jq # Install jq as a system package
         state: present
-      become: true
-
-    - name: Install awscli using pip3
-      ansible.builtin.pip:
-        name: awscli
-        executable: pip3
       become: true
 
     - name: Create a virtual environment for Python packages
@@ -36,9 +30,9 @@
         creates: /opt/venv
       become: true
 
-    - name: Install Python passlib module in the virtual environment
+    - name: Install awscli and passlib in the virtual environment
       ansible.builtin.command:
-        cmd: /opt/venv/bin/pip install passlib
+        cmd: "/opt/venv/bin/pip install awscli passlib"
       become: true
 
     - name: Create .aws folder
@@ -71,7 +65,7 @@
         mode: "0600"
 
     - name: Check S3 Buckets
-      ansible.builtin.shell: "aws s3 ls | cut -d ' ' -f 3"
+      ansible.builtin.shell: "/opt/venv/bin/aws s3 ls | cut -d ' ' -f 3"
       register: buckets
 
     - name: Print Bucket Name
@@ -79,7 +73,7 @@
         var: buckets
 
     - name: Get VPCs
-      ansible.builtin.shell: "aws ec2 describe-vpcs | jq '.Vpcs[].VpcId' -r"
+      ansible.builtin.shell: "/opt/venv/bin/aws ec2 describe-vpcs | /opt/venv/bin/jq '.Vpcs[].VpcId' -r"
       register: vpcs
 
     - name: Print VPC ID
