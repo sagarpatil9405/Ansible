@@ -14,25 +14,38 @@
       6265353764313339300a396136323631343937393730363739623637343636336631356135326230
       6439
   tasks:
-    - name: Ensure pip3 is installed
+    - name: Ensure pip3 and venv are installed
       ansible.builtin.package:
-        name: python3-pip
+        name:
+          - python3-pip
+          - python3-venv
         state: present
       become: true
 
-    - name: Install Python passlib module
-      ansible.builtin.pip:
-        name: passlib
-        executable: pip3 # Explicitly specify pip3
+    - name: Create a virtual environment for Python packages
+      ansible.builtin.command:
+        cmd: python3 -m venv /opt/venv
+      args:
+        creates: /opt/venv
+      become: true
+
+    - name: Install Python passlib module in the virtual environment
+      ansible.builtin.command:
+        cmd: /opt/venv/bin/pip install passlib
       become: true
 
     - name: Create .aws folder
-      shell: mkdir -p /root/.aws
+      ansible.builtin.file:
+        path: /root/.aws
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
       ignore_errors: yes
 
     - name: Copy Encrypted File To /tmp
-      copy:
-        src: /tmp/{{ item }} # This Encrypted File Must Be Created Prior To Running The Playbook.
+      ansible.builtin.copy:
+        src: /tmp/{{ item }}
         dest: /tmp/{{ item }}
         owner: root
         group: root
@@ -43,27 +56,27 @@
         - tls.crt
 
     - name: Copy Encrypted Credentials File To .aws folder
-      copy:
-        src: /tmp/aws_creds # This Encrypted File Must Be Created Prior To Running The Playbook.
+      ansible.builtin.copy:
+        src: /tmp/aws_creds
         dest: /root/.aws/credentials
         owner: root
         group: root
         mode: "0600"
 
     - name: Check S3 Buckets
-      shell: aws s3 ls | cut -d " " -f 3
+      ansible.builtin.shell: "/opt/venv/bin/aws s3 ls | cut -d ' ' -f 3"
       register: buckets
 
     - name: Print Bucket Name
-      debug:
+      ansible.builtin.debug:
         var: buckets
 
-    - name: Get VPCS
-      shell: aws ec2 describe-vpcs | jq ".Vpcs[].VpcId" -r
+    - name: Get VPCs
+      ansible.builtin.shell: "/opt/venv/bin/aws ec2 describe-vpcs | /opt/venv/bin/jq '.Vpcs[].VpcId' -r"
       register: vpcs
 
     - name: Print VPC ID
-      debug:
+      ansible.builtin.debug:
         var: vpcs
 
     - name: Creating admin users
@@ -92,7 +105,7 @@
 
   handlers:
     - name: Restart SSH Service
-      shell: service sshd restart
+      ansible.builtin.shell: service sshd restart
 
     - name: Restart elastic-agent
-      shell: sudo heartbeat setup && sudo service heartbeat-elastic start
+      ansible.builtin.shell: sudo heartbeat setup && sudo service heartbeat-elastic start
