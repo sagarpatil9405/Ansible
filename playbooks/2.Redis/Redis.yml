@@ -10,7 +10,7 @@
       loop: #YOU CAN WITH_ITEMS ALSO
         - build-essential #THESE ARE TWO PACKAGES TO BE INSTALLED.
         - tcl
-      when: ansible_distribution == 'Ubuntu' and ansible_distribution_version == '20.04' #UNLESS THIS NOT MATCHING THE ABOVE WILL NOT BE INSTALLED
+      when: ansible_distribution == 'Ubuntu' and ansible_distribution_version == '24.04' #UNLESS THIS NOT MATCHING THE ABOVE WILL NOT BE INSTALLED
 
     - name: Check Redis Status #CHECKING THE STATUS
       shell: systemctl status redis --no-pager
@@ -31,15 +31,35 @@
         remote_src: yes #IF YOU ARE NOT GIVING REMOTE_SORUCE: YES --> ITS GOING TO CHECKIN LOCAL
       when: redis_status.rc != 0
 
-    - name: Compile and install Redis #
+    - name: Ensure make is installed
+      apt:
+        name: make
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure make is installed (for RHEL-based systems)
+      yum:
+        name: make
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Compile and install Redis
       shell: |
-        # cd /tmp/redis-6.2.5 
+        cd /tmp/redis-6.2.5
         make
         make install
       args:
         executable: /bin/bash
       when: redis_status.rc != 0
-      #WE ARE GOING INTO THIS FODLER AND INSTALLING MAKE AND WE ARE EXECUTING ALL COMMANDS IN BIN/BASH
+
+    # - name: Compile and install Redis #
+    #   shell: |
+    #     # cd /tmp/redis-6.2.5
+    #     make install
+    #   args:
+    #     executable: /bin/bash
+    #   when: redis_status.rc != 0
+    #   #WE ARE GOING INTO THIS FODLER AND INSTALLING MAKE AND WE ARE EXECUTING ALL COMMANDS IN BIN/BASH
 
     - name: Configure Redis
       copy:
