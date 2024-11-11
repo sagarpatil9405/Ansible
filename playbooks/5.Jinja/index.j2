@@ -75,21 +75,10 @@
 <div class="content">
     <div class="server-info">
         <h3>AWS Account: {{ aws_account }}</h3>
-        <h1>Today's Date: {{ todays_date }}</h1>
-        <h1>Server Hostname: {{ host_name }}</h1>
-        <h1>Server FQDN: {{ fqdn_name }}</h1>
-        <h1>Server OS Family: {{ os_family }}</h1>
-        <h1>Server OS Version: {{ os_dest }}</h1>
     </div>
 
     <hr class="divider">
 
-    <div class="friends-list">
-        {% for item in friends %}
-            <h3>My Friend's Name: {{ item }}</h3>
-        {% endfor %}
-    </div>
-</div>
 
 <div id="smallcont">
     <div id="try1">Let's Play</div>
