@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Color Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div style="text-align: center;">
+    <header style="border-top: 5px solid orange; border-bottom: 5px solid orange; margin: 20px 0;">
+        <h1>{{ custom_heading }}</h1>
+        <p style="font-size: 1.2em;">{{ custom_para }}</p>
+        <h3>AWS Account: {{ aws_account }}</h3>
+    </header>
+
+    <section style="margin: 20px 0;">
+        <h2>Server Information</h2>
+        <p><strong>Today's Date:</strong> {{ todays_date }}</p>
+        <p><strong>Hostname:</strong> {{ host_name }}</p>
+        <p><strong>Fully Qualified Domain Name:</strong> {{ fqdn_name }}</p>
+        <p><strong>IP Address:</strong> {{ ip_address }}</p>
+        <p><strong>OS Family:</strong> {{ os_family }}</p>
+        <p><strong>OS Version:</strong> {{ os_dest }}</p>
+    </section>
+
+    <section style="border-top: 3px dashed orange; padding-top: 10px;">
+        {% for item in friends %}
+            <h3>My Friend's Name is {{ item }}</h3>
+        {% endfor %}
+    </section>
+
+    <section id="gameSection" style="margin-top: 30px;">
+        <div style="font-size: 1.5em; margin-bottom: 10px; color: green;">Let's Play</div>
+        <div id="smallcont" style="display: flex; justify-content: center;">
+            <button id="try1" style="padding: 10px 20px;">Start Game</button>
+        </div>
+
+        <div id="container" style="display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; justify-content: center; margin-top: 20px;">
+            <div class="square"></div>
+            <div class="square"></div>
+            <div class="square"></div>
+            <div class="square"></div>
+            <div class="square"></div>
+            <div class="square"></div>
+        </div>
+    </section>
+</div>
+
+<script type="text/javascript" src="scorekeeper.js"></script>
+</body>
+</html>
